@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "meshy-ai": {
+      "command": "python",
+      "args": ["src/server.py"],
+      "disabled": false,
+      "autoApprove": [],
+      "alwaysAllow": []
+    }
+  }
+}
