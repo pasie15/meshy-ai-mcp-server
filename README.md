@@ -16,7 +16,7 @@ This is a Model Context Protocol (MCP) server for interacting with the [Meshy AI
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/pasie15/scenario.com-mcp-server
    cd meshy-ai-mcp-server
    ```
 
@@ -42,14 +42,13 @@ This is a Model Context Protocol (MCP) server for interacting with the [Meshy AI
    ```bash
    pip install mcp
    ```
-
+   
 4. Install dependencies:
-2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file with your Meshy AI API key:
+6. Create a `.env` file with your Meshy AI API key:
    ```bash
    cp .env.example .env
    # Edit .env and add your API key
