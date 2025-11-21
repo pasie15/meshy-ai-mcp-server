@@ -1,5 +1,3 @@
-import { setTimeout as delay } from "timers/promises";
-
 export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined>;
   timeoutMs?: number;
@@ -146,9 +144,6 @@ export class MeshyClient {
 
   private buildAbortSignal(timeoutMs?: number): AbortSignal | undefined {
     if (!timeoutMs) return undefined;
-    const controller = new AbortController();
-
-    delay(timeoutMs).then(() => controller.abort()).catch(() => undefined);
-    return controller.signal;
+    return AbortSignal.timeout(timeoutMs);
   }
 }

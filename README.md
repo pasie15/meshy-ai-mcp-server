@@ -1,119 +1,113 @@
-# Meshy AI MCP Server (TypeScript)
+# Meshy AI MCP Server
 
-This repository provides a Model Context Protocol (MCP) server implemented in **Node.js + TypeScript** for interacting with the [Meshy AI API](https://docs.meshy.ai/). It exposes tools for text-to-3d, image-to-3d, texturing, remeshing, rigging, animations, and balance checks.
+This is a [Model Context Protocol](https://github.com/modelcontextprotocol/modelcontextprotocol) (MCP) server that wraps the [Meshy AI API](https://docs.meshy.ai/). It enables MCP clients (like Claude Desktop, Cursor, Cline) to interact with Meshy's generative 3D tools directly.
 
 ## Features
 
-- Generate 3D models from text or images
-- Apply textures to 3D models
-- Remesh and optimize 3D models
-- Rig 3D characters for animation
-- Create animation tasks (using `action_id` values from the Meshy animation library)
-- Stream task progress with server-sent events
-- List and retrieve tasks of every type
-- Check account balance
+- **Text-to-3D**: Generate 3D models from text prompts.
+- **Image-to-3D**: Create 3D models from reference images.
+- **Text-to-Texture**: Apply textures to existing models using text prompts.
+- **Model Optimization**: Remesh and optimize geometry.
+- **Rigging**: Auto-rig 3D characters for animation.
+- **Animation**: Apply animations to rigged characters.
+- **Streaming**: Real-time progress updates for long-running tasks.
 
-## Prerequisites
+## Installation
 
-- Node.js 18+
-- A Meshy AI API key (`MESHY_API_KEY`)
+### Option 1: Run directly with npx (Recommended)
 
-## Setup
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Create a `.env` file with your API key (and optional overrides):
-   ```bash
-   cp .env.example .env
-   # edit .env to add MESHY_API_KEY
-   ```
-
-3. Build the server:
-   ```bash
-   npm run build
-   ```
-
-## Running the MCP server
-
-You can start the compiled server directly:
-
-```bash
-npm start
-```
-
-Or run it in development mode without building:
-
-```bash
-npm run dev
-```
-
-### MCP client configuration
-
-Add this MCP server configuration to your MCP-enabled editor (e.g., Cursor, Cline, or any MCP client). The example below
-references the installed module directly and includes your API key:
+You can run the server directly using `npx` without installing it globally.
 
 ```json
 {
   "mcpServers": {
     "meshy-ai": {
-      "command": "node",
-      "args": ["node_modules/meshy-ai-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": [
+        "-y",
+        "meshy-ai-mcp-server"
+      ],
       "env": {
-        "MESHY_API_KEY": "YOUR_MESHY_API_KEY"
-      },
-      "disabled": false,
-      "autoApprove": [],
-      "alwaysAllow": []
+        "MESHY_API_KEY": "your_meshy_api_key_here"
+      }
     }
   }
 }
 ```
 
-> When installed via npm, the package build runs automatically (via `prepare`) so `dist/index.js` is available under
-> `node_modules/meshy-ai-mcp-server/`. If running from a cloned repo, run `npm run build` first.
+### Option 2: Clone and Build Locally
 
-## Available tools
+If you want to modify the code or run it from a local source:
 
-- `create_text_to_3d_task`, `retrieve_text_to_3d_task`, `list_text_to_3d_tasks`, `stream_text_to_3d_task`
-- `create_image_to_3d_task`, `retrieve_image_to_3d_task`, `list_image_to_3d_tasks`, `stream_image_to_3d_task`
-- `create_text_to_texture_task`, `retrieve_text_to_texture_task`, `list_text_to_texture_tasks`, `stream_text_to_texture_task`
-- `create_remesh_task`, `retrieve_remesh_task`, `list_remesh_tasks`, `stream_remesh_task`
-- `create_rigging_task`, `retrieve_rigging_task`, `list_rigging_tasks`, `stream_rigging_task`
-- `create_animation_task`, `retrieve_animation_task`, `list_animation_tasks`, `stream_animation_task`
-- `get_balance`
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd meshy-ai-mcp-server
+    ```
 
-### Rigging and animations
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-Rigging and animation payloads are passed straight through to the Meshy API. Refer to the Meshy docs for the exact request shapes:
+3.  **Build the project:**
+    ```bash
+    npm run build
+    ```
 
-- Rigging and animation endpoints: https://docs.meshy.ai/en/api/rigging-and-animation
-- Animation action library (for `action_id` values): https://docs.meshy.ai/en/api/animation-library
+4.  **Configure your MCP Client:**
 
-Tool inputs for rigging and animations **do not** require a wrapper object. Provide the payload exactly as the Meshy API expects, e.g.:
+    Add the following to your MCP client configuration (e.g., `claude_desktop_config.json` or VS Code settings):
 
-```jsonc
-// Rigging
-{
-  "model_url": "https://.../rig-me.glb",
-  "rig_preset": "STANDARD_HUMANOID"
-}
+    ```json
+    {
+      "mcpServers": {
+        "meshy-ai": {
+          "command": "node",
+          "args": [
+            "/absolute/path/to/meshy-ai-mcp-server/dist/index.js"
+          ],
+          "env": {
+            "MESHY_API_KEY": "your_meshy_api_key_here"
+          }
+        }
+      }
+    }
+    ```
 
-// Animation (action_id is required)
-{
-  "rigging_task_id": "...",
-  "action_id": "walking",
-  "fps": 30
-}
+## Configuration
+
+You need a Meshy AI API key to use this server.
+
+1.  Get your API key from the [Meshy Dashboard](https://app.meshy.ai/settings/api).
+2.  Set the `MESHY_API_KEY` environment variable in your MCP client configuration (as shown above).
+
+### Optional Environment Variables
+
+- `MESHY_API_BASE`: Override the API base URL (default: `https://api.meshy.ai/openapi`).
+- `MESHY_STREAM_TIMEOUT_MS`: Timeout for streaming responses in milliseconds (default: `300000` aka 5 minutes).
+
+## Development
+
+To run the server in development mode with auto-reloading:
+
+```bash
+# Create a .env file
+echo "MESHY_API_KEY=your_key_here" > .env
+
+# Run in dev mode
+npm run dev
 ```
 
-## Environment variables
+## Available Tools
 
-- `MESHY_API_KEY` (required): your Meshy AI API key.
-- `MESHY_API_BASE` (optional): override the Meshy API base URL (defaults to `https://api.meshy.ai/openapi`).
-- `MESHY_STREAM_TIMEOUT_MS` (optional): default timeout in milliseconds for stream endpoints (defaults to 300000).
+- **Text to 3D**: `create_text_to_3d_task`, `retrieve_text_to_3d_task`, `list_text_to_3d_tasks`, `stream_text_to_3d_task`
+- **Image to 3D**: `create_image_to_3d_task`, `retrieve_image_to_3d_task`, `list_image_to_3d_tasks`, `stream_image_to_3d_task`
+- **Texturing**: `create_text_to_texture_task`, `retrieve_text_to_texture_task`, `list_text_to_texture_tasks`, `stream_text_to_texture_task`
+- **Remeshing**: `create_remesh_task`, `retrieve_remesh_task`, `list_remesh_tasks`, `stream_remesh_task`
+- **Rigging**: `create_rigging_task`, `retrieve_rigging_task`, `list_rigging_tasks`, `stream_rigging_task`
+- **Animation**: `create_animation_task`, `retrieve_animation_task`, `list_animation_tasks`, `stream_animation_task`
+- **Utility**: `get_balance`
 
 ## License
 

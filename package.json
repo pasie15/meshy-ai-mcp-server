@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "description": "A Model Context Protocol server that wraps the Meshy AI API with TypeScript and Node.js tools, including rigging and animation endpoints.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "meshy-ai-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "scripts": {
     "build": "tsc",
