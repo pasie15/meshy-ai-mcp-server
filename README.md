@@ -52,14 +52,18 @@ npm run dev
 
 ### MCP client configuration
 
-Add this MCP server configuration to your MCP-enabled editor (e.g., Cursor, Cline, or any MCP client):
+Add this MCP server configuration to your MCP-enabled editor (e.g., Cursor, Cline, or any MCP client). The example below
+references the installed module directly and includes your API key:
 
 ```json
 {
   "mcpServers": {
     "meshy-ai": {
       "command": "node",
-      "args": ["dist/index.js"],
+      "args": ["node_modules/meshy-ai-mcp-server/dist/index.js"],
+      "env": {
+        "MESHY_API_KEY": "YOUR_MESHY_API_KEY"
+      },
       "disabled": false,
       "autoApprove": [],
       "alwaysAllow": []
@@ -68,7 +72,8 @@ Add this MCP server configuration to your MCP-enabled editor (e.g., Cursor, Clin
 }
 ```
 
-> Ensure you have built the project (`npm run build`) so that `dist/index.js` exists.
+> When installed via npm, the package build runs automatically (via `prepare`) so `dist/index.js` is available under
+> `node_modules/meshy-ai-mcp-server/`. If running from a cloned repo, run `npm run build` first.
 
 ## Available tools
 
