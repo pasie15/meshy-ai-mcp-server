@@ -2,8 +2,6 @@
 
 This repository provides a Model Context Protocol (MCP) server implemented in **Node.js + TypeScript** for interacting with the [Meshy AI API](https://docs.meshy.ai/). It exposes tools for text-to-3d, image-to-3d, texturing, remeshing, rigging, animations, and balance checks.
 
-> Branch notice: the previous `work` branch has been renamed to `main` so the latest TypeScript implementation lives on the default branch. If you pulled before this rename, run `git fetch --all --prune` and check out `main` to see the updates.
-
 ## Features
 
 - Generate 3D models from text or images
