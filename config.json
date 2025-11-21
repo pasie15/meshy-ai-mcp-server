@@ -1,8 +1,11 @@
 {
   "mcpServers": {
     "meshy-ai": {
-      "command": "python",
-      "args": ["src/server.py"],
+      "command": "node",
+      "args": ["node_modules/meshy-ai-mcp-server/dist/index.js"],
+      "env": {
+        "MESHY_API_KEY": "YOUR_MESHY_API_KEY"
+      },
       "disabled": false,
       "autoApprove": [],
       "alwaysAllow": []
