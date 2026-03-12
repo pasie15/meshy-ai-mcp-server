@@ -280,7 +280,7 @@ server.registerTool(
 );
 
 const animationPayloadSchema = z
-  .object({ action_id: z.string() })
+  .object({ action_id: z.coerce.number().int() })
   .passthrough();
 
 server.registerTool(
