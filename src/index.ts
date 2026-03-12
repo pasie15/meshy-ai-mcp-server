@@ -290,7 +290,7 @@ server.registerTool(
       "Create an animation task for a rigged model. The payload must include an action_id from the Meshy animation library.",
     inputSchema: animationPayloadSchema,
   },
-  async (request) => jsonResponse(await client.post("/v1/animation", request)),
+  async (request) => jsonResponse(await client.post("/v1/animations", request)),
 );
 
 server.registerTool(
@@ -299,7 +299,7 @@ server.registerTool(
     description: "Retrieve the status or result of an animation task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/animation/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await client.get(`/v1/animations/${task_id}`)),
 );
 
 server.registerTool(
@@ -311,7 +311,7 @@ server.registerTool(
       page: z.number().int().optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/animation", { query: args })),
+  async (args = {}) => jsonResponse(await client.get("/v1/animations", { query: args })),
 );
 
 server.registerTool(
@@ -323,7 +323,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/animation/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/animations/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
