@@ -32,6 +32,19 @@ export class MeshyClient {
     return response.json();
   }
 
+  async delete(path: string, options: RequestOptions = {}): Promise<unknown> {
+    const url = this.buildUrl(path, options.query);
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: this.headers(),
+      signal: this.buildAbortSignal(options.timeoutMs),
+    });
+
+    await this.ensureOk(response, url);
+    const text = await response.text();
+    return text ? JSON.parse(text) : { success: true };
+  }
+
   async post(path: string, body: unknown, options: RequestOptions = {}): Promise<unknown> {
     const url = this.buildUrl(path, options.query);
     const response = await fetch(url, {
