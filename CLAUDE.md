@@ -20,7 +20,7 @@ This is an ESM TypeScript project (`"type": "module"`) with two source files:
 
 - **`src/client.ts`** — `MeshyClient` class: HTTP client for the Meshy REST API. Handles GET/POST requests with Bearer auth, query parameter building, and SSE streaming. Stream responses are parsed for `data:` lines and terminate on `SUCCEEDED`/`FAILED`/`CANCELED` status.
 
-- **`src/index.ts`** — Server entrypoint (has shebang for CLI use). Creates an `McpServer` instance using `@modelcontextprotocol/sdk`, registers 25 tools covering 6 Meshy API domains (text-to-3d, image-to-3d, text-to-texture, remesh, rigging, animation) plus a balance check. Connects via `StdioServerTransport`. Each tool handler delegates to `MeshyClient` and wraps results with `jsonResponse()`.
+- **`src/index.ts`** — Server entrypoint (has shebang for CLI use). Creates an `McpServer` instance using `@modelcontextprotocol/sdk`, registers 51 tools covering 10 Meshy API domains (text-to-3d, image-to-3d, multi-image-to-3d, text-to-texture, retexture, text-to-image, image-to-image, remesh, rigging, animation) plus a balance check. Each domain has create/retrieve/list/stream/delete tools. Connects via `StdioServerTransport`. Each tool handler delegates to `MeshyClient` and wraps results with `jsonResponse()`.
 
 ### Tool Registration Pattern
 
