@@ -92,6 +92,10 @@ You need a Meshy AI API key to use this server.
 - `MESHY_API_BASE`: Override the API base URL (default: `https://api.meshy.ai/openapi`).
 - `MESHY_STREAM_TIMEOUT_MS`: Timeout for streaming responses in milliseconds (default: `300000` aka 5 minutes).
 
+### Troubleshooting
+
+If your MCP client reports that the server closed during `initialize`, check that the client configuration passes `MESHY_API_KEY` into the server process. The server can start without the key so clients can inspect available tools, but Meshy API tool calls will fail until the key is configured.
+
 ## Development
 
 To run the server in development mode with auto-reloading:

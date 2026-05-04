@@ -5,20 +5,21 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { MeshyClient } from "./client.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const apiKey = process.env.MESHY_API_KEY;
-if (!apiKey) {
-  throw new Error("MESHY_API_KEY environment variable is not set");
-}
-
 const apiBase = process.env.MESHY_API_BASE;
 const parsedStreamTimeout = process.env.MESHY_STREAM_TIMEOUT_MS
   ? Number.parseInt(process.env.MESHY_STREAM_TIMEOUT_MS, 10)
   : undefined;
 const streamTimeoutMs = Number.isFinite(parsedStreamTimeout) ? parsedStreamTimeout : undefined;
 
-const client = new MeshyClient(apiKey, { apiBase, streamTimeoutMs });
+function getMeshyClient(): MeshyClient {
+  if (!apiKey) {
+    throw new Error("MESHY_API_KEY environment variable is not set");
+  }
+  return new MeshyClient(apiKey, { apiBase, streamTimeoutMs });
+}
 
 const server = new McpServer(
   {
@@ -83,7 +84,7 @@ server.registerTool(
       { message: "preview_task_id is required when mode is 'refine'", path: ["preview_task_id"] },
     ),
   },
-  async (args) => jsonResponse(await client.post("/v2/text-to-3d", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v2/text-to-3d", args)),
 );
 
 server.registerTool(
@@ -92,7 +93,7 @@ server.registerTool(
     description: "Retrieve the status and result of a text-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v2/text-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v2/text-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -105,7 +106,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v2/text-to-3d", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v2/text-to-3d", { query: args })),
 );
 
 server.registerTool(
@@ -117,7 +118,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v2/text-to-3d/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v2/text-to-3d/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
@@ -149,7 +150,7 @@ server.registerTool(
       origin_at: z.string().optional(),
     }),
   },
-  async (args) => jsonResponse(await client.post("/v1/image-to-3d", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/image-to-3d", args)),
 );
 
 server.registerTool(
@@ -158,7 +159,7 @@ server.registerTool(
     description: "Retrieve the status and result of an image-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/image-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/image-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -171,7 +172,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/image-to-3d", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/image-to-3d", { query: args })),
 );
 
 server.registerTool(
@@ -183,7 +184,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/image-to-3d/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/image-to-3d/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
@@ -201,7 +202,7 @@ server.registerTool(
       art_style: z.string().optional(),
     }),
   },
-  async (args) => jsonResponse(await client.post("/v1/text-to-texture", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/text-to-texture", args)),
 );
 
 server.registerTool(
@@ -210,7 +211,7 @@ server.registerTool(
     description: "Retrieve the status and result of a text-to-texture task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/text-to-texture/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/text-to-texture/${task_id}`)),
 );
 
 server.registerTool(
@@ -223,7 +224,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/text-to-texture", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/text-to-texture", { query: args })),
 );
 
 server.registerTool(
@@ -235,7 +236,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/text-to-texture/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/text-to-texture/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
@@ -262,7 +263,7 @@ server.registerTool(
       { message: "Either input_task_id or model_url must be provided" },
     ),
   },
-  async (args) => jsonResponse(await client.post("/v1/remesh", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/remesh", args)),
 );
 
 server.registerTool(
@@ -271,7 +272,7 @@ server.registerTool(
     description: "Retrieve the status and result of a remesh task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/remesh/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/remesh/${task_id}`)),
 );
 
 server.registerTool(
@@ -284,7 +285,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/remesh", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/remesh", { query: args })),
 );
 
 server.registerTool(
@@ -296,7 +297,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/remesh/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/remesh/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
@@ -318,7 +319,7 @@ server.registerTool(
       { message: "Either input_task_id or model_url must be provided" },
     ),
   },
-  async (request) => jsonResponse(await client.post("/v1/rigging", request)),
+  async (request) => jsonResponse(await getMeshyClient().post("/v1/rigging", request)),
 );
 
 server.registerTool(
@@ -327,7 +328,7 @@ server.registerTool(
     description: "Retrieve the status of a rigging task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/rigging/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/rigging/${task_id}`)),
 );
 
 server.registerTool(
@@ -340,7 +341,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/rigging", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/rigging", { query: args })),
 );
 
 server.registerTool(
@@ -352,7 +353,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/rigging/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/rigging/${task_id}/stream`, timeout)),
 );
 
 server.registerTool(
@@ -372,7 +373,7 @@ server.registerTool(
       }).optional(),
     }),
   },
-  async (request) => jsonResponse(await client.post("/v1/animations", request)),
+  async (request) => jsonResponse(await getMeshyClient().post("/v1/animations", request)),
 );
 
 server.registerTool(
@@ -381,7 +382,7 @@ server.registerTool(
     description: "Retrieve the status or result of an animation task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/animations/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/animations/${task_id}`)),
 );
 
 server.registerTool(
@@ -394,7 +395,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/animations", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/animations", { query: args })),
 );
 
 server.registerTool(
@@ -406,7 +407,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/animations/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/animations/${task_id}/stream`, timeout)),
 );
 
 // --- Multi Image to 3D ---
@@ -440,7 +441,7 @@ server.registerTool(
       origin_at: z.string().optional(),
     }),
   },
-  async (args) => jsonResponse(await client.post("/v1/multi-image-to-3d", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/multi-image-to-3d", args)),
 );
 
 server.registerTool(
@@ -449,7 +450,7 @@ server.registerTool(
     description: "Retrieve the status and result of a multi-image-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/multi-image-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/multi-image-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -462,7 +463,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/multi-image-to-3d", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/multi-image-to-3d", { query: args })),
 );
 
 server.registerTool(
@@ -474,7 +475,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/multi-image-to-3d/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/multi-image-to-3d/${task_id}/stream`, timeout)),
 );
 
 // --- Retexture ---
@@ -510,7 +511,7 @@ server.registerTool(
       { message: "text_style_prompt and image_style_url are mutually exclusive; provide only one" },
     ),
   },
-  async (args) => jsonResponse(await client.post("/v1/retexture", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/retexture", args)),
 );
 
 server.registerTool(
@@ -519,7 +520,7 @@ server.registerTool(
     description: "Retrieve the status and result of a retexture task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/retexture/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/retexture/${task_id}`)),
 );
 
 server.registerTool(
@@ -532,7 +533,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/retexture", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/retexture", { query: args })),
 );
 
 server.registerTool(
@@ -544,7 +545,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/retexture/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/retexture/${task_id}/stream`, timeout)),
 );
 
 // --- Text to Image ---
@@ -566,7 +567,7 @@ server.registerTool(
       aspect_ratio: z.string().optional(),
     }),
   },
-  async (args) => jsonResponse(await client.post("/v1/text-to-image", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/text-to-image", args)),
 );
 
 server.registerTool(
@@ -575,7 +576,7 @@ server.registerTool(
     description: "Retrieve the status and result of a text-to-image task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/text-to-image/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/text-to-image/${task_id}`)),
 );
 
 server.registerTool(
@@ -588,7 +589,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/text-to-image", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/text-to-image", { query: args })),
 );
 
 server.registerTool(
@@ -600,7 +601,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/text-to-image/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/text-to-image/${task_id}/stream`, timeout)),
 );
 
 // --- Image to Image ---
@@ -621,7 +622,7 @@ server.registerTool(
       generate_multi_view: z.boolean().optional(),
     }),
   },
-  async (args) => jsonResponse(await client.post("/v1/image-to-image", args)),
+  async (args) => jsonResponse(await getMeshyClient().post("/v1/image-to-image", args)),
 );
 
 server.registerTool(
@@ -630,7 +631,7 @@ server.registerTool(
     description: "Retrieve the status and result of an image-to-image task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.get(`/v1/image-to-image/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/image-to-image/${task_id}`)),
 );
 
 server.registerTool(
@@ -643,7 +644,7 @@ server.registerTool(
       sort_by: z.enum(["+created_at", "-created_at"]).optional(),
     }),
   },
-  async (args = {}) => jsonResponse(await client.get("/v1/image-to-image", { query: args })),
+  async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/image-to-image", { query: args })),
 );
 
 server.registerTool(
@@ -655,7 +656,7 @@ server.registerTool(
       timeout: z.number().int().optional(),
     }),
   },
-  async ({ task_id, timeout }) => jsonResponse(await client.stream(`/v1/image-to-image/${task_id}/stream`, timeout)),
+  async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/image-to-image/${task_id}/stream`, timeout)),
 );
 
 // --- Delete endpoints ---
@@ -666,7 +667,7 @@ server.registerTool(
     description: "Delete a text-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v2/text-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v2/text-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -675,7 +676,7 @@ server.registerTool(
     description: "Delete an image-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/image-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/image-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -684,7 +685,7 @@ server.registerTool(
     description: "Delete a multi-image-to-3d task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/multi-image-to-3d/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/multi-image-to-3d/${task_id}`)),
 );
 
 server.registerTool(
@@ -693,7 +694,7 @@ server.registerTool(
     description: "Delete a text-to-texture task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/text-to-texture/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/text-to-texture/${task_id}`)),
 );
 
 server.registerTool(
@@ -702,7 +703,7 @@ server.registerTool(
     description: "Delete a remesh task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/remesh/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/remesh/${task_id}`)),
 );
 
 server.registerTool(
@@ -711,7 +712,7 @@ server.registerTool(
     description: "Delete a rigging task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/rigging/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/rigging/${task_id}`)),
 );
 
 server.registerTool(
@@ -720,7 +721,7 @@ server.registerTool(
     description: "Delete an animation task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/animations/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/animations/${task_id}`)),
 );
 
 server.registerTool(
@@ -729,7 +730,7 @@ server.registerTool(
     description: "Delete a retexture task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/retexture/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/retexture/${task_id}`)),
 );
 
 server.registerTool(
@@ -738,7 +739,7 @@ server.registerTool(
     description: "Delete a text-to-image task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/text-to-image/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/text-to-image/${task_id}`)),
 );
 
 server.registerTool(
@@ -747,7 +748,7 @@ server.registerTool(
     description: "Delete an image-to-image task.",
     inputSchema: z.object({ task_id: z.string() }),
   },
-  async ({ task_id }) => jsonResponse(await client.delete(`/v1/image-to-image/${task_id}`)),
+  async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/image-to-image/${task_id}`)),
 );
 
 // --- Utility ---
@@ -757,7 +758,7 @@ server.registerTool(
   {
     description: "Retrieve your Meshy AI account balance.",
   },
-  async () => jsonResponse(await client.get("/v1/balance")),
+  async () => jsonResponse(await getMeshyClient().get("/v1/balance")),
 );
 
 const transport = new StdioServerTransport();
