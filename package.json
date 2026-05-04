@@ -24,6 +24,14 @@
     "animation",
     "rigging"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pasie15/meshy-ai-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pasie15/meshy-ai-mcp-server/issues"
+  },
+  "homepage": "https://github.com/pasie15/meshy-ai-mcp-server#readme",
   "author": "",
   "license": "MIT",
   "dependencies": {

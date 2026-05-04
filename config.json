@@ -2,7 +2,7 @@
   "mcpServers": {
     "meshy-ai": {
       "command": "node",
-      "args": ["node_modules/meshy-ai-mcp-server/dist/index.js"],
+      "args": ["/absolute/path/to/meshy-ai-mcp-server/dist/index.js"],
       "env": {
         "MESHY_API_KEY": "YOUR_MESHY_API_KEY"
       },
