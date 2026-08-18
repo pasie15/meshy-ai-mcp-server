@@ -234,7 +234,11 @@ export function createServer(): McpServer {
   registerTool(
     "create_text_to_texture_task",
     {
-      description: "Apply textures to a 3D model using text prompts.",
+      description:
+        "Apply textures to a 3D model using text prompts. " +
+        "Compatibility alias: this tool uses Meshy's /v1/retexture API (there is no live /v1/text-to-texture endpoint). " +
+        "model_url is required. text_style_prompt is taken from style_prompt, or object_prompt if style_prompt is omitted. " +
+        "enable_original_uv and enable_pbr are forwarded to retexture.",
       inputSchema: z.object({
         model_url: z.string(),
         object_prompt: z.string(),
@@ -246,41 +250,53 @@ export function createServer(): McpServer {
         art_style: z.string().optional(),
       }),
     },
-    async (args) => jsonResponse(await getMeshyClient().post("/v1/text-to-texture", args)),
+    async (args) => {
+      const body: Record<string, unknown> = {
+        model_url: args.model_url,
+        text_style_prompt: args.style_prompt || args.object_prompt,
+      };
+      if (args.enable_original_uv !== undefined) {
+        body.enable_original_uv = args.enable_original_uv;
+      }
+      if (args.enable_pbr !== undefined) {
+        body.enable_pbr = args.enable_pbr;
+      }
+      return jsonResponse(await getMeshyClient().post("/v1/retexture", body));
+    },
   );
 
   registerTool(
     "retrieve_text_to_texture_task",
     {
-      description: "Retrieve the status and result of a text-to-texture task.",
+      description: "Retrieve the status and result of a text-to-texture task. Uses the /v1/retexture API.",
       inputSchema: z.object({ task_id: z.string() }),
     },
-    async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/text-to-texture/${task_id}`)),
+    async ({ task_id }) => jsonResponse(await getMeshyClient().get(`/v1/retexture/${task_id}`)),
   );
 
   registerTool(
     "list_text_to_texture_tasks",
     {
-      description: "List previously created text-to-texture tasks. sort_by accepts '+created_at' or '-created_at'.",
+      description: "List previously created text-to-texture tasks via the /v1/retexture API. sort_by accepts '+created_at' or '-created_at'.",
       inputSchema: z.object({
         page_size: z.number().int().optional(),
         page_num: z.number().int().optional(),
         sort_by: z.enum(["+created_at", "-created_at"]).optional(),
       }),
     },
-    async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/text-to-texture", { query: args })),
+    async (args = {}) => jsonResponse(await getMeshyClient().get("/v1/retexture", { query: args })),
   );
 
   registerTool(
     "stream_text_to_texture_task",
     {
-      description: "Stream updates for a text-to-texture task.",
+      description: "Stream updates for a text-to-texture task using the /v1/retexture API.",
       inputSchema: z.object({
         task_id: z.string(),
         timeout: z.number().int().optional(),
       }),
     },
-    async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/text-to-texture/${task_id}/stream`, timeout)),
+    async ({ task_id, timeout }) => jsonResponse(await getMeshyClient().stream(`/v1/retexture/${task_id}/stream`, timeout)),
   );
 
   registerTool(
@@ -735,10 +751,10 @@ export function createServer(): McpServer {
   registerTool(
     "delete_text_to_texture_task",
     {
-      description: "Delete a text-to-texture task.",
+      description: "Delete a text-to-texture task via the /v1/retexture API.",
       inputSchema: z.object({ task_id: z.string() }),
     },
-    async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/text-to-texture/${task_id}`)),
+    async ({ task_id }) => jsonResponse(await getMeshyClient().delete(`/v1/retexture/${task_id}`)),
   );
 
   registerTool(
