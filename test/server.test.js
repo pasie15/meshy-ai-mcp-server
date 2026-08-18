@@ -226,3 +226,73 @@ test("stream SSE Invalid ID payload sets isError", async () => {
     }
   }
 });
+
+
+const IMAGE_AI_MODELS = ["nano-banana", "nano-banana-2", "nano-banana-pro", "gpt-image-2"];
+
+function toolSchema(mcpServer, name) {
+  const tool = mcpServer._registeredTools[name];
+  assert.ok(tool, `missing registered tool ${name}`);
+  assert.ok(tool.inputSchema, `missing inputSchema for ${name}`);
+  return tool.inputSchema;
+}
+
+function objectShape(schema) {
+  let current = schema;
+  for (let i = 0; i < 8 && current; i += 1) {
+    if (current.shape) return current.shape;
+    current = current._def && current._def.schema;
+  }
+  throw new Error("could not inspect tool schema shape");
+}
+
+test("image create tool schemas accept new models and extra fields", () => {
+  const mcpServer = createServer();
+  const t2i = toolSchema(mcpServer, "create_text_to_image_task");
+  const i2i = toolSchema(mcpServer, "create_image_to_image_task");
+
+  for (const ai_model of IMAGE_AI_MODELS) {
+    assert.doesNotThrow(() => t2i.parse({ ai_model, prompt: "a dragon", remove_background: true, aspect_ratio: "1:1" }));
+    assert.doesNotThrow(() => i2i.parse({
+      ai_model,
+      prompt: "make it cyberpunk",
+      reference_image_urls: ["https://example.com/a.png"],
+      remove_background: true,
+      aspect_ratio: "3:2",
+    }));
+  }
+
+  assert.throws(() => t2i.parse({ ai_model: "garbage-model", prompt: "a dragon" }));
+  assert.throws(() => i2i.parse({
+    ai_model: "not-a-model",
+    prompt: "edit",
+    reference_image_urls: ["https://example.com/a.png"],
+  }));
+
+  const t2iShape = objectShape(t2i);
+  const i2iShape = objectShape(i2i);
+  assert.ok(t2iShape.remove_background, "create_text_to_image_task is missing remove_background");
+  assert.ok(i2iShape.remove_background, "create_image_to_image_task is missing remove_background");
+  assert.ok(i2iShape.aspect_ratio, "create_image_to_image_task is missing aspect_ratio");
+  assert.ok(t2iShape.aspect_ratio, "create_text_to_image_task is missing aspect_ratio");
+});
+
+test("create_text_to_3d_task preview schema includes model_type and ultra_mode", () => {
+  const mcpServer = createServer();
+  const schema = toolSchema(mcpServer, "create_text_to_3d_task");
+  const shape = objectShape(schema);
+  assert.ok(shape.model_type, "create_text_to_3d_task is missing model_type");
+  assert.ok(shape.ultra_mode, "create_text_to_3d_task is missing ultra_mode");
+  assert.doesNotThrow(() => schema.parse({
+    mode: "preview",
+    prompt: "a monster mask",
+    ai_model: "meshy-7",
+    model_type: "smart-topology",
+    ultra_mode: true,
+  }));
+  assert.throws(() => schema.parse({
+    mode: "preview",
+    prompt: "a monster mask",
+    model_type: "not-a-type",
+  }));
+});
