@@ -154,3 +154,75 @@ test("package.json version is readable from compiled dist via createRequire", ()
   assert.equal(fromDist.version, packageJson.version);
   readFileSync(new URL("../package.json", import.meta.url));
 });
+
+test("create_text_to_texture_task maps onto retexture", async () => {
+  const previousKey = process.env.MESHY_API_KEY;
+  const previousFetch = globalThis.fetch;
+  process.env.MESHY_API_KEY = "test-secret-key-do-not-leak";
+  let captured;
+  globalThis.fetch = async (url, init = {}) => {
+    captured = { url: String(url), method: init.method, body: init.body ? JSON.parse(init.body) : undefined };
+    return new Response(JSON.stringify({ result: "ok" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+  try {
+    const { client } = await connectTestClient();
+    const result = await client.callTool({
+      name: "create_text_to_texture_task",
+      arguments: {
+        model_url: "https://example.com/model.glb",
+        object_prompt: "a wooden chair",
+        style_prompt: "oak grain",
+        enable_original_uv: true,
+        enable_pbr: false,
+        art_style: "realistic",
+      },
+    });
+    assert.equal(result.isError, undefined);
+    assert.match(captured.url, /\/v1\/retexture$/);
+    assert.equal(captured.method, "POST");
+    assert.deepEqual(captured.body, {
+      model_url: "https://example.com/model.glb",
+      text_style_prompt: "oak grain",
+      enable_original_uv: true,
+      enable_pbr: false,
+    });
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) {
+      delete process.env.MESHY_API_KEY;
+    } else {
+      process.env.MESHY_API_KEY = previousKey;
+    }
+  }
+});
+
+test("stream SSE Invalid ID payload sets isError", async () => {
+  const previousKey = process.env.MESHY_API_KEY;
+  const previousFetch = globalThis.fetch;
+  process.env.MESHY_API_KEY = "test-secret-key-do-not-leak";
+  globalThis.fetch = async () =>
+    new Response("data: " + JSON.stringify({ message: "Invalid ID", status_code: 400 }) + "\n\n", {
+      status: 200,
+      headers: { "Content-Type": "text/event-stream" },
+    });
+  try {
+    const { client } = await connectTestClient();
+    const result = await client.callTool({
+      name: "stream_text_to_3d_task",
+      arguments: { task_id: "bad-id" },
+    });
+    assert.equal(result.isError, true);
+    const text = result.content.map((part) => ("text" in part ? part.text : "")).join("\n");
+    assert.match(text, /Meshy stream error \(400\): Invalid ID/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) {
+      delete process.env.MESHY_API_KEY;
+    } else {
+      process.env.MESHY_API_KEY = previousKey;
+    }
+  }
+});
