@@ -7,8 +7,7 @@ This is a [Model Context Protocol](https://github.com/modelcontextprotocol/model
 - **Text-to-3D**: Generate 3D models from text prompts.
 - **Image-to-3D**: Create 3D models from reference images.
 - **Multi-Image-to-3D**: Create 3D models from multiple reference images.
-- **Text-to-Texture**: Apply textures to existing models using text prompts.
-- **Retexture**: Apply new textures to existing 3D models.
+- **Retexture**: Apply new textures to existing 3D models. The text-to-texture tools are compatibility aliases for the same retexture API.
 - **Text-to-Image**: Generate images from text prompts.
 - **Image-to-Image**: Generate new images from input images.
 - **Model Optimization**: Remesh and optimize geometry.
@@ -113,8 +112,8 @@ npm run dev
 - **Text to 3D**: `create_text_to_3d_task`, `retrieve_text_to_3d_task`, `list_text_to_3d_tasks`, `stream_text_to_3d_task`, `delete_text_to_3d_task`
 - **Image to 3D**: `create_image_to_3d_task`, `retrieve_image_to_3d_task`, `list_image_to_3d_tasks`, `stream_image_to_3d_task`, `delete_image_to_3d_task`
 - **Multi-Image to 3D**: `create_multi_image_to_3d_task`, `retrieve_multi_image_to_3d_task`, `list_multi_image_to_3d_tasks`, `stream_multi_image_to_3d_task`, `delete_multi_image_to_3d_task`
-- **Texturing**: `create_text_to_texture_task`, `retrieve_text_to_texture_task`, `list_text_to_texture_tasks`, `stream_text_to_texture_task`, `delete_text_to_texture_task`
 - **Retexture**: `create_retexture_task`, `retrieve_retexture_task`, `list_retexture_tasks`, `stream_retexture_task`, `delete_retexture_task`
+- **Texturing (retexture aliases)**: `create_text_to_texture_task`, `retrieve_text_to_texture_task`, `list_text_to_texture_tasks`, `stream_text_to_texture_task`, `delete_text_to_texture_task` — same retexture API, historical tool names kept for compatibility.
 - **Text to Image**: `create_text_to_image_task`, `retrieve_text_to_image_task`, `list_text_to_image_tasks`, `stream_text_to_image_task`, `delete_text_to_image_task`
 - **Image to Image**: `create_image_to_image_task`, `retrieve_image_to_image_task`, `list_image_to_image_tasks`, `stream_image_to_image_task`, `delete_image_to_image_task`
 - **Remeshing**: `create_remesh_task`, `retrieve_remesh_task`, `list_remesh_tasks`, `stream_remesh_task`, `delete_remesh_task`
