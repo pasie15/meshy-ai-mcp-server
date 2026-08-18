@@ -9,6 +9,20 @@ export interface MeshyClientOptions {
   streamTimeoutMs?: number;
 }
 
+export const MAX_ERROR_BODY_CHARS = 2048;
+
+export function truncateErrorBody(text: string, max = MAX_ERROR_BODY_CHARS): string {
+  if (text.length <= max) {
+    return text;
+  }
+  return `${text.slice(0, max)}… [truncated ${text.length - max} chars]`;
+}
+
+function redactSecret(text: string, secret: string): string {
+  if (!secret) return text;
+  return text.split(secret).join("[redacted]");
+}
+
 export class MeshyClient {
   private readonly apiKey: string;
   private readonly apiBase: string;
@@ -24,7 +38,7 @@ export class MeshyClient {
     const url = this.buildUrl(path, options.query);
     const response = await fetch(url, {
       method: "GET",
-      headers: this.headers(options.acceptStream),
+      headers: this.headers({ acceptStream: options.acceptStream }),
       signal: this.buildAbortSignal(options.timeoutMs),
     });
 
@@ -49,7 +63,7 @@ export class MeshyClient {
     const url = this.buildUrl(path, options.query);
     const response = await fetch(url, {
       method: "POST",
-      headers: this.headers(options.acceptStream),
+      headers: this.headers({ jsonBody: true, acceptStream: options.acceptStream }),
       body: JSON.stringify(body),
       signal: this.buildAbortSignal(options.timeoutMs),
     });
@@ -62,7 +76,7 @@ export class MeshyClient {
     const url = this.buildUrl(path);
     const response = await fetch(url, {
       method: "GET",
-      headers: this.headers(true),
+      headers: this.headers({ acceptStream: true }),
       signal: this.buildAbortSignal(timeoutMs ?? this.defaultStreamTimeoutMs),
     });
 
@@ -115,13 +129,16 @@ export class MeshyClient {
     return finalPayload ?? { error: "No data received from stream" };
   }
 
-  private headers(acceptStream = false): HeadersInit {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
+  private headers(options: { jsonBody?: boolean; acceptStream?: boolean } = {}): HeadersInit {
+    const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
     };
 
-    if (acceptStream) {
+    if (options.jsonBody) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (options.acceptStream) {
       headers["Accept"] = "text/event-stream";
     }
 
@@ -152,7 +169,9 @@ export class MeshyClient {
       bodyText = `Failed to read response body: ${String(error)}`;
     }
 
-    throw new Error(`Meshy API request failed (${response.status}) for ${url}: ${bodyText}`);
+    const safeUrl = redactSecret(url, this.apiKey);
+    const safeBody = truncateErrorBody(redactSecret(bodyText, this.apiKey));
+    throw new Error(`Meshy API request failed (${response.status}) for ${safeUrl}: ${safeBody}`);
   }
 
   private buildAbortSignal(timeoutMs?: number): AbortSignal | undefined {
