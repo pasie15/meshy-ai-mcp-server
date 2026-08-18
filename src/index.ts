@@ -94,7 +94,9 @@ export function createServer(): McpServer {
         "Generate a 3D model from a text prompt using a two-step workflow. " +
         "Step 1 – set mode='preview' to create a draft mesh (requires 'prompt'). " +
         "Step 2 – set mode='refine' with 'preview_task_id' pointing to a SUCCEEDED preview task to add textures. " +
-        "ai_model accepts 'meshy-5', 'meshy-6', or 'latest'. " +
+        "ai_model accepts 'meshy-5', 'meshy-6', 'meshy-7', or 'latest' (Meshy 7). " +
+        "On preview, model_type accepts 'standard', 'smart-topology', or 'lowpoly'. " +
+        "ultra_mode is a preview-only boolean for meshy-7/latest. " +
         "art_style accepts 'realistic' or 'sculpture' (deprecated for meshy-6). " +
         "topology accepts 'quad' or 'triangle'. " +
         "symmetry_mode accepts 'auto', 'on', or 'off'. " +
@@ -106,6 +108,8 @@ export function createServer(): McpServer {
         prompt: z.string().max(600).optional(),
         art_style: z.string().optional(),
         ai_model: z.string().optional(),
+        model_type: z.enum(["standard", "smart-topology", "lowpoly"]).optional(),
+        ultra_mode: z.boolean().optional(),
         topology: z.string().optional(),
         target_polycount: z.number().int().min(100).max(300000).optional(),
         should_remesh: z.boolean().optional(),
@@ -171,7 +175,7 @@ export function createServer(): McpServer {
       description:
         "Generate a 3D model from an input image. " +
         "image_url must be a public URL or base64 data URI (.jpg/.jpeg/.png). " +
-        "ai_model accepts 'meshy-5', 'meshy-6', or 'latest'. " +
+        "ai_model accepts 'meshy-5', 'meshy-6', 'meshy-7', or 'latest' (Meshy 7). " +
         "topology accepts 'quad' or 'triangle'. " +
         "symmetry_mode accepts 'auto', 'on', or 'off'. " +
         "pose_mode accepts 'a-pose', 't-pose', or '' (empty). " +
@@ -478,7 +482,7 @@ export function createServer(): McpServer {
       description:
         "Generate a 3D model from 1–4 input images. " +
         "image_urls must be an array of 1–4 public URLs or base64 data URIs (.jpg/.jpeg/.png). " +
-        "ai_model accepts 'meshy-5', 'meshy-6', or 'latest'. " +
+        "ai_model accepts 'meshy-5', 'meshy-6', 'meshy-7', or 'latest' (Meshy 7). " +
         "topology accepts 'quad' or 'triangle'. " +
         "symmetry_mode accepts 'auto', 'on', or 'off'. " +
         "pose_mode accepts 'a-pose', 't-pose', or '' (empty). " +
@@ -547,7 +551,7 @@ export function createServer(): McpServer {
         "Apply new textures to a 3D model using text or image style guidance. " +
         "Provide either input_task_id (ID of a completed Meshy task) or model_url (public URL or data URI to a .glb/.gltf/.obj/.fbx/.stl file). " +
         "Provide either text_style_prompt (up to 600 chars) or image_style_url to guide the texture style; these are mutually exclusive. " +
-        "ai_model accepts 'meshy-5', 'meshy-6', or 'latest'. " +
+        "ai_model accepts 'meshy-5', 'meshy-6', 'meshy-7', or 'latest' (Meshy 7). " +
         "enable_original_uv (default true) preserves existing UV mapping. " +
         "enable_pbr generates additional PBR maps (metallic, roughness, normal).",
       inputSchema: z.object({
@@ -615,16 +619,18 @@ export function createServer(): McpServer {
     {
       description:
         "Generate an image from a text prompt. " +
-        "ai_model is required and accepts 'nano-banana' or 'nano-banana-pro'. " +
-        "aspect_ratio accepts '1:1', '16:9', '9:16', '4:3', or '3:4' (default '1:1'). " +
+        "ai_model is required and accepts 'nano-banana', 'nano-banana-2', 'nano-banana-pro', or 'gpt-image-2'. " +
+        "aspect_ratio for the nano-banana family: '1:1', '16:9', '9:16', '4:3', or '3:4'; for gpt-image-2: '1:1', '3:2', or '2:3' (default '1:1'). " +
         "pose_mode accepts 'a-pose' or 't-pose'. " +
-        "Set generate_multi_view=true to generate multi-angle views (cannot be combined with aspect_ratio).",
+        "Set generate_multi_view=true to generate multi-angle views (cannot be combined with aspect_ratio). " +
+        "Set remove_background=true to return a transparent RGBA PNG.",
       inputSchema: z.object({
-        ai_model: z.enum(["nano-banana", "nano-banana-pro"]),
+        ai_model: z.enum(["nano-banana", "nano-banana-2", "nano-banana-pro", "gpt-image-2"]),
         prompt: z.string(),
         generate_multi_view: z.boolean().optional(),
         pose_mode: z.string().optional(),
         aspect_ratio: z.string().optional(),
+        remove_background: z.boolean().optional(),
       }),
     },
     async (args) => jsonResponse(await getMeshyClient().post("/v1/text-to-image", args)),
@@ -671,15 +677,20 @@ export function createServer(): McpServer {
     {
       description:
         "Generate a new image based on reference images and a text prompt. " +
-        "ai_model is required and accepts 'nano-banana' or 'nano-banana-pro'. " +
+        "ai_model is required and accepts 'nano-banana', 'nano-banana-2', 'nano-banana-pro', or 'gpt-image-2'. " +
         "reference_image_urls is required: an array of 1–5 public URLs or base64 data URIs. " +
         "prompt describes the transformation. " +
-        "Set generate_multi_view=true to generate multi-angle views.",
+        "aspect_ratio for the nano-banana family: '1:1', '16:9', '9:16', '4:3', or '3:4'; for gpt-image-2: '1:1', '3:2', or '2:3' (default '1:1'). " +
+        "Cannot combine aspect_ratio with generate_multi_view. " +
+        "Set generate_multi_view=true to generate multi-angle views. " +
+        "Set remove_background=true to return a transparent RGBA PNG.",
       inputSchema: z.object({
-        ai_model: z.enum(["nano-banana", "nano-banana-pro"]),
+        ai_model: z.enum(["nano-banana", "nano-banana-2", "nano-banana-pro", "gpt-image-2"]),
         prompt: z.string(),
         reference_image_urls: z.array(z.string()).min(1).max(5),
         generate_multi_view: z.boolean().optional(),
+        aspect_ratio: z.string().optional(),
+        remove_background: z.boolean().optional(),
       }),
     },
     async (args) => jsonResponse(await getMeshyClient().post("/v1/image-to-image", args)),
